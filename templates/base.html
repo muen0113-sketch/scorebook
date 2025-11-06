@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}成績記錄本{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="container header">
+    <h1>家教學生成績記錄</h1>
+    <nav>
+      <a href="{{ url_for('root') }}">今天</a>
+    </nav>
+  </header>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="container flash">
+        {% for cat, msg in messages %}
+          <div class="flash-item {{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="container footer">
+    <small>© Scorebook Demo</small>
+  </footer>
+
+  <script>
+    // month picker -> 導向該月第一天
+    function gotoMonth(input) {
+      const val = input.value; // YYYY-MM
+      if (!val) return;
+      const d = new Date(val + '-01');
+      const y = d.getFullYear();
+      const m = (d.getMonth()+1).toString().padStart(2,'0');
+      window.location = `{{ url_for('scores_view') }}?d=${y}-${m}-01`;
+    }
+    function gotoDate(input) {
+      if (!input.value) return;
+      window.location = `{{ url_for('scores_view') }}?d=${input.value}`;
+    }
+  </script>
+</body>
+</html>

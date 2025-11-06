@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}成績記錄本 · {{ d.strftime('%Y-%m-%d') }}{% endblock %}
+
+{% block content %}
+<div class="layout">
+  <!-- 左：主區域 -->
+  <section class="main">
+    <!-- Top：月/日選擇 + 今天資訊 -->
+    <div class="toolbar">
+      <div class="month-picker">
+        <label>月份：</label>
+        <input type="month" value="{{ first_day.strftime('%Y-%m') }}" onchange="gotoMonth(this)">
+        <a class="btn" href="{{ url_for('scores_view', d=prev_month.strftime('%Y-%m-%d')) }}">◀ 上個月</a>
+        <a class="btn" href="{{ url_for('scores_view', d=next_month.strftime('%Y-%m-%d')) }}">下個月 ▶</a>
+      </div>
+      <div class="day-picker">
+        <label>日期：</label>
+        <input type="date" value="{{ d.strftime('%Y-%m-%d') }}" onchange="gotoDate(this)">
+        <span class="muted">今天是：{{ d.strftime('%Y-%m-%d') }}（週{{ weekday }}）</span>
+      </div>
+    </div>
+
+    <!-- Middle：分數表單 -->
+    <form method="post" action="{{ url_for('save_scores') }}" class="card">
+      <input type="hidden" name="the_date" value="{{ d.strftime('%Y-%m-%d') }}">
+      <table class="grid">
+        <thead>
+          <tr>
+            <th style="width: 24%">科目</th>
+            <th style="width: 18%">分數</th>
+            <th style="width: 18%">名次</th>
+            <th style="width: 28%">備註</th>
+            <th style="width: 12%">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for subj in subjects %}
+            {% set row = scores_map.get(subj.id) %}
+            <tr>
+              <td><strong>{{ subj.name }}</strong></td>
+              <td>
+                <input type="hidden" name="score_subject_ids" value="{{ subj.id }}">
+                <input type="number" name="score[{{ subj.id }}]" step="0.01" min="0" placeholder="e.g. 88" value="{{ row.score if row else '' }}">
+              </td>
+              <td>
+                <input type="number" name="rank[{{ subj.id }}]" min="1" step="1" placeholder="e.g. 3" value="{{ row.rank if row else '' }}">
+              </td>
+              <td>
+                <input type="text" name="note[{{ subj.id }}]" maxlength="200" placeholder="例如：錯在概率題；下次加強幾何" value="{{ row.note if row else '' }}">
+              </td>
+              <td>
+                <form method="post" action="{{ url_for('delete_subject', sid=subj.id) }}" onsubmit="return confirm('確定刪除科目：{{ subj.name }}？此操作會刪除所有相關紀錄。')">
+                  <button type="submit" class="btn danger">刪除科目</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="actions">
+        <button class="btn primary" type="submit">💾 儲存當日紀錄</button>
+        <a class="btn" target="_blank" href="{{ url_for('export_pdf', d=d.strftime('%Y-%m-%d')) }}">🖨️ 匯出當日 PDF</a>
+        <span class="muted">（全部留空＝刪除該科的當日紀錄）</span>
+      </div>
+    </form>
+  </section>
+
+  <!-- 右：側邊欄（新增/刪除科目） -->
+  <aside class="sidebar">
+    <div class="card">
+      <h3>新增科目</h3>
+      <form method="post" action="{{ url_for('add_subject') }}" class="vert">
+        <input type="text" name="name" placeholder="例如：理化、地理" required>
+        <button type="submit" class="btn">➕ 新增</button>
+      </form>
+      <p class="muted">刪除科目可在左側表格中操作。</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
